@@ -22,19 +22,16 @@ const DrawRectangleDrag = {
   },
 
   onMouseDown(state, event) {
-    console.log("onMouseDown");
     event.preventDefault();
     this.onMouseDownOrTouchStart(state, event);
   },
 
   onTouchStart(state, event) {
-    console.log("onTouchStart");
     event.preventDefault();
     this.onMouseDownOrTouchStart(state, event);
   },
 
   onMouseMove(state, event) {
-    console.log("onMouseMove");
     if (!state.startPoint) {
       return;
     }
@@ -52,12 +49,10 @@ const DrawRectangleDrag = {
   },
 
   onMouseUp(state, event) {
-    console.log("onMouseUp");
     this.finishDrawing(state, event);
   },
 
   onStop(state) {
-    console.log("onStop");
     enableZoom(this);
     this.updateUIClasses({ mouse: "none" });
 
@@ -80,7 +75,6 @@ const DrawRectangleDrag = {
   },
 
   onTrash(state) {
-    console.log("onTrash");
     this.deleteFeature([state.rectangle.id], { silent: true });
     this.changeMode("simple_select");
   },
@@ -99,7 +93,6 @@ const DrawRectangleDrag = {
   },
 
   updateDrawingWhileDraggingOrMouseMove(state, event) {
-    console.log(this.isSquareMode);
     if (this.isSquareMode) {
       const westEastDistance = turfDistance(
         state.startPoint,
@@ -123,17 +116,14 @@ const DrawRectangleDrag = {
       ]);
 
       if (westEastDistance > southNorthDistance) {
-        const destinationPoint = turfDestination(
+        const computedPointOnTheSouthNorthBearing = turfDestination(
           state.startPoint,
           westEastDistance,
           bearing + 90 < 180 && bearing + 90 > 0 ? 0 : 180,
           {
             units: "kilometers",
           }
-        );
-
-        const latComputedEquidistantCoordinate =
-          destinationPoint.geometry.coordinates;
+        ).geometry.coordinates;
 
         state.rectangle.updateCoordinate(
           "0.1",
@@ -144,36 +134,33 @@ const DrawRectangleDrag = {
         state.rectangle.updateCoordinate(
           "0.2",
           event.lngLat.lng,
-          latComputedEquidistantCoordinate[1]
+          computedPointOnTheSouthNorthBearing[1]
         );
 
         state.rectangle.updateCoordinate(
           "0.3",
           state.startPoint[0],
-          latComputedEquidistantCoordinate[1]
+          computedPointOnTheSouthNorthBearing[1]
         );
       } else {
-        const destinationPoint = turfDestination(
+        const computedPointOnTheWestEastBearing = turfDestination(
           state.startPoint,
           southNorthDistance,
           bearing > 0 ? 90 : 270,
           {
             units: "kilometers",
           }
-        );
-
-        const lngComputedEquidistantCoordinate =
-          destinationPoint.geometry.coordinates;
+        ).geometry.coordinates;
 
         state.rectangle.updateCoordinate(
           "0.1",
-          lngComputedEquidistantCoordinate[0],
+          computedPointOnTheWestEastBearing[0],
           state.startPoint[1]
         );
 
         state.rectangle.updateCoordinate(
           "0.2",
-          lngComputedEquidistantCoordinate[0],
+          computedPointOnTheWestEastBearing[0],
           event.lngLat.lat
         );
 
