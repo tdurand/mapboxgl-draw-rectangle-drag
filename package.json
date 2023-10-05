@@ -34,5 +34,10 @@
     "rollup": "^1.16.2",
     "rollup-plugin-node-resolve": "^5.0.4",
     "rollup-plugin-terser": "^5.0.0"
+  },
+  "dependencies": {
+    "@turf/bearing": "^6.5.0",
+    "@turf/destination": "^6.5.0",
+    "@turf/distance": "^6.5.0"
   }
 }

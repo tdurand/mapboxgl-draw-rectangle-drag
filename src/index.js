@@ -1,5 +1,8 @@
 import createRectangle from "./utils/create-rectangle";
 import { enableZoom, disableZoom } from "./utils/zoom";
+import turfDistance from "@turf/distance";
+import turfDestination from "@turf/destination";
+import turfBearing from "@turf/bearing";
 
 const DrawRectangleDrag = {
   onSetup() {
@@ -12,6 +15,8 @@ const DrawRectangleDrag = {
     this.updateUIClasses({ mouse: "add" });
     this.setActionableState({ trash: true });
     disableZoom(this);
+
+    this.isSquareMode = false;
 
     return { rectangle };
   },
@@ -80,30 +85,140 @@ const DrawRectangleDrag = {
     this.changeMode("simple_select");
   },
 
+  onKeyUp(state, e) {
+    if (e.keyCode === 27) return this.onTrash(state);
+    if (e.keyCode === 16) {
+      this.isSquareMode = false;
+    }
+  },
+
+  onKeyDown(state, e) {
+    if (e.keyCode === 16) {
+      this.isSquareMode = true;
+    }
+  },
+
   updateDrawingWhileDraggingOrMouseMove(state, event) {
-    // Upper right vertex - maxX, minY
-    state.rectangle.updateCoordinate(
-      "0.1",
-      event.lngLat.lng,
-      state.startPoint[1]
-    );
+    console.log(this.isSquareMode);
+    if (this.isSquareMode) {
+      const westEastDistance = turfDistance(
+        state.startPoint,
+        [event.lngLat.lng, state.startPoint[1]],
+        {
+          units: "kilometers",
+        }
+      );
 
-    // Lower right vertex - maxX, maxY
-    state.rectangle.updateCoordinate("0.2", event.lngLat.lng, event.lngLat.lat);
+      const southNorthDistance = turfDistance(
+        state.startPoint,
+        [state.startPoint[0], event.lngLat.lat],
+        {
+          units: "kilometers",
+        }
+      );
 
-    // Lower left vertex - minX, maxY
-    state.rectangle.updateCoordinate(
-      "0.3",
-      state.startPoint[0],
-      event.lngLat.lat
-    );
+      const bearing = turfBearing(state.startPoint, [
+        event.lngLat.lng,
+        event.lngLat.lat,
+      ]);
 
-    // Starting point again
-    state.rectangle.updateCoordinate(
-      "0.4",
-      state.startPoint[0],
-      state.startPoint[1]
-    );
+      if (westEastDistance > southNorthDistance) {
+        const destinationPoint = turfDestination(
+          state.startPoint,
+          westEastDistance,
+          bearing + 90 < 180 && bearing + 90 > 0 ? 0 : 180,
+          {
+            units: "kilometers",
+          }
+        );
+
+        const latComputedEquidistantCoordinate =
+          destinationPoint.geometry.coordinates;
+
+        state.rectangle.updateCoordinate(
+          "0.1",
+          event.lngLat.lng,
+          state.startPoint[1]
+        );
+
+        state.rectangle.updateCoordinate(
+          "0.2",
+          event.lngLat.lng,
+          latComputedEquidistantCoordinate[1]
+        );
+
+        state.rectangle.updateCoordinate(
+          "0.3",
+          state.startPoint[0],
+          latComputedEquidistantCoordinate[1]
+        );
+      } else {
+        const destinationPoint = turfDestination(
+          state.startPoint,
+          southNorthDistance,
+          bearing > 0 ? 90 : 270,
+          {
+            units: "kilometers",
+          }
+        );
+
+        const lngComputedEquidistantCoordinate =
+          destinationPoint.geometry.coordinates;
+
+        state.rectangle.updateCoordinate(
+          "0.1",
+          lngComputedEquidistantCoordinate[0],
+          state.startPoint[1]
+        );
+
+        state.rectangle.updateCoordinate(
+          "0.2",
+          lngComputedEquidistantCoordinate[0],
+          event.lngLat.lat
+        );
+
+        state.rectangle.updateCoordinate(
+          "0.3",
+          state.startPoint[0],
+          event.lngLat.lat
+        );
+      }
+
+      // Starting point again
+      state.rectangle.updateCoordinate(
+        "0.4",
+        state.startPoint[0],
+        state.startPoint[1]
+      );
+    } else {
+      // Upper right vertex - maxX, minY
+      state.rectangle.updateCoordinate(
+        "0.1",
+        event.lngLat.lng,
+        state.startPoint[1]
+      );
+
+      // Lower right vertex - maxX, maxY
+      state.rectangle.updateCoordinate(
+        "0.2",
+        event.lngLat.lng,
+        event.lngLat.lat
+      );
+
+      // Lower left vertex - minX, maxY
+      state.rectangle.updateCoordinate(
+        "0.3",
+        state.startPoint[0],
+        event.lngLat.lat
+      );
+
+      // Starting point again
+      state.rectangle.updateCoordinate(
+        "0.4",
+        state.startPoint[0],
+        state.startPoint[1]
+      );
+    }
   },
 
   onMouseDownOrTouchStart(state, event) {
