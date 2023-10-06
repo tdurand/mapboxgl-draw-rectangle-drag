@@ -99,9 +99,11 @@
         });
 
         map.on("draw.render", (e) => {
-          var currentRectangle = e.target.queryRenderedFeatures()[0];
-          //console.log(currentRectangle);
-          if (currentRectangle) {
+          const data = draw.getAll();
+          var currentRectangle = data.features[0];
+          // if is drawing
+          if (currentRectangle.geometry.coordinates[0].length > 2) {
+            console.log(currentRectangle);
             // can perform turf computation here on the rectangle
             var side1 = turf.distance(
               currentRectangle.geometry.coordinates[0][0],
