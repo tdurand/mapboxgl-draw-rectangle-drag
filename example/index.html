@@ -46,12 +46,15 @@
     </style>
 
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <!--
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
+    -->
     <link
       rel="stylesheet"
       href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css"
       type="text/css"
     />
+    <script src="../../mapbox-gl-draw/dist/mapbox-gl-draw-unminified.js"></script>
     <script src="../build/mapboxgl-draw-rectangle-drag.browser.js"></script>
     <div id="map"></div>
     <div class="calculation-box">
@@ -95,7 +98,12 @@
 
         // on mode change, if direct_select mode, force go back to simple_select
         map.on("draw.modechange", (e) => {
-          //console.log(e.mode);
+          if (e.mode === "simple_select") {
+            console.log(e);
+            draw.changeMode("direct_select", {
+              featureId: draw.getAll().features[0].id,
+            });
+          }
         });
 
         map.on("draw.render", (e) => {
@@ -103,7 +111,7 @@
           var currentRectangle = data.features[0];
           // if is drawing
           if (currentRectangle.geometry.coordinates[0].length > 2) {
-            console.log(currentRectangle);
+            // console.log(currentRectangle);
             // can perform turf computation here on the rectangle
             var side1 = turf.distance(
               currentRectangle.geometry.coordinates[0][0],
@@ -116,8 +124,9 @@
               { units: "kilometers" }
             );
 
-            console.log(side1);
-            console.log(side2);
+            // Sides length
+            //console.log(side1);
+            //console.log(side2);
           }
         });
 
