@@ -40,7 +40,6 @@ const DrawRectangleDrag = {
   },
 
   onDrag(state, event) {
-    console.log("onDrag");
     if (!state.startPoint) {
       return;
     }
@@ -49,6 +48,10 @@ const DrawRectangleDrag = {
   },
 
   onMouseUp(state, event) {
+    this.finishDrawing(state, event);
+  },
+
+  onTouchEnd(state, event) {
     this.finishDrawing(state, event);
   },
 
